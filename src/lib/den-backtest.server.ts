@@ -113,6 +113,38 @@ function bucket(label: string, list: BacktestSetup[]): BacktestBucket {
   };
 }
 
+const LOW_SAMPLE_RESOLVED = 3;
+
+/**
+ * Split the run's setups by whether each checklist component scored on that
+ * setup, and re-apply the same bucket stats to both sides.
+ */
+function componentPresence(setups: BacktestSetup[]): ComponentPresenceRow[] {
+  const rows = DEN_COMPONENT_KEYS.map((key) => {
+    const has = setups.filter((s) => s.components.some((c) => c.key === key));
+    const hasNot = setups.filter((s) => !s.components.some((c) => c.key === key));
+    const present = bucket("Present", has);
+    const absent = bucket("Absent", hasNot);
+    const noComparison = has.length === 0 || hasNot.length === 0;
+    const lowSample = present.resolved < LOW_SAMPLE_RESOLVED || absent.resolved < LOW_SAMPLE_RESOLVED;
+    const avgRGap =
+      !noComparison && present.avgR !== null && absent.avgR !== null
+        ? Math.abs(present.avgR - absent.avgR)
+        : null;
+    return {
+      key,
+      label: CHECKLIST_BY_KEY[key]?.label ?? key,
+      present,
+      absent,
+      noComparison,
+      lowSample,
+      avgRGap,
+    };
+  });
+  // Biggest avgR gap first; rows without a valid comparison sink to the bottom.
+  return rows.sort((a, b) => (b.avgRGap ?? -1) - (a.avgRGap ?? -1));
+}
+
 function scoreBucketLabel(score: number): string {
   if (score >= 12) return "12+";
   if (score >= 9) return "9–11";
