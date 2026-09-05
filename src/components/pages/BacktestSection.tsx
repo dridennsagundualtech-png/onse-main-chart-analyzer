@@ -296,10 +296,7 @@ export function BacktestSection() {
                   <thead className="text-muted-foreground">
                     <tr>
                       <th className="py-1 pr-3">Component</th>
-                      <th className="py-1 pr-3">Setups</th>
-                      <th className="py-1 pr-3">Resolved</th>
-                      <th className="py-1 pr-3">Win rate</th>
-                      <th className="py-1">Avg R</th>
+                      <th className="py-1">Present vs. absent (setups · win rate · avg R)</th>
                     </tr>
                   </thead>
                   <tbody>
