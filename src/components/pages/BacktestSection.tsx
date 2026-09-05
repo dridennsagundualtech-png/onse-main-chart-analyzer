@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { ChevronDown, Loader2, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -34,6 +34,7 @@ export function BacktestSection() {
   const [candleCount, setCandleCount] = useState(400);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<BacktestResult | null>(null);
+  const [showComponents, setShowComponents] = useState(false);
 
   const symbolsQuery = useQuery({
     queryKey: ["market-symbols"],
@@ -267,6 +268,77 @@ export function BacktestSection() {
               </table>
             </div>
           </section>
+
+          <section className="card-soft space-y-3 p-5">
+            <button
+              type="button"
+              onClick={() => setShowComponents((open) => !open)}
+              className="flex w-full items-start justify-between gap-3 text-left"
+            >
+              <span>
+                <span className="font-display text-base font-semibold">By component presence</span>
+                <span className="mt-1 block text-[11px] text-muted-foreground">
+                  Compares setups that included each component vs. setups that didn&apos;t, using
+                  this same run&apos;s results.
+                </span>
+              </span>
+              <ChevronDown
+                className={cn(
+                  "mt-1 size-4 shrink-0 text-muted-foreground transition-transform",
+                  showComponents && "rotate-180",
+                )}
+              />
+            </button>
+
+            {showComponents && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="text-muted-foreground">
+                    <tr>
+                      <th className="py-1 pr-3">Component</th>
+                      <th className="py-1">Present vs. absent (setups · win rate · avg R)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.byComponent.map((row) => (
+                      <tr key={row.key} className="border-t border-border/60 align-top">
+                        <td className="py-1.5 pr-3" colSpan={row.noComparison ? 5 : 1}>
+                          <span className="font-medium">{row.label}</span>
+                          {row.noComparison && (
+                            <span className="ml-2 text-muted-foreground">
+                              {row.present.setups === 0
+                                ? "never present this run — no comparison possible"
+                                : "always present this run — no comparison possible"}
+                            </span>
+                          )}
+                          {!row.noComparison && row.lowSample && (
+                            <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                              low sample
+                            </span>
+                          )}
+                        </td>
+                        {!row.noComparison && (
+                          <td className="py-1.5 pr-3" colSpan={4}>
+                            <div className={cn("space-y-1", row.lowSample && "text-muted-foreground")}>
+                              {[row.present, row.absent].map((side) => (
+                                <div key={side.label} className="grid grid-cols-4 gap-2">
+                                  <span>{side.label}</span>
+                                  <span>{side.setups} setups</span>
+                                  <span>{pct(side.winRate)}</span>
+                                  <span>{rr(side.avgR)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
 
           <section className="card-soft space-y-3 p-5">
             <h2 className="font-display text-base font-semibold">Individual setups</h2>

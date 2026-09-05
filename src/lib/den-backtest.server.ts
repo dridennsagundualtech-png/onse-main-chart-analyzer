@@ -8,7 +8,9 @@
  *
  * This file does not modify the live analyser — it reuses runDenAnalysis.
  */
+import { CHECKLIST_BY_KEY } from "./analysis-types";
 import { runDenAnalysis, type DenSeries } from "./den-analyzer.server";
+import { DEN_COMPONENT_KEYS } from "./den-rules";
 import type { Candle } from "./market.server";
 
 export interface BacktestInput {
@@ -57,6 +59,19 @@ export interface BacktestBucket {
   avgR: number | null;
 }
 
+export interface ComponentPresenceRow {
+  key: string;
+  label: string;
+  present: BacktestBucket;
+  absent: BacktestBucket;
+  /** True when one side has zero setups — no comparison is possible. */
+  noComparison: boolean;
+  /** True when either side has fewer than 3 resolved setups. */
+  lowSample: boolean;
+  /** |present avgR − absent avgR| when both sides are resolved; null otherwise. */
+  avgRGap: number | null;
+}
+
 export interface BacktestResult {
   symbol: string;
   stepTimeframe: string;
@@ -74,6 +89,7 @@ export interface BacktestResult {
   totalR: number;
   byDirection: BacktestBucket[];
   byScore: BacktestBucket[];
+  byComponent: ComponentPresenceRow[];
   setups: BacktestSetup[];
 }
 
@@ -95,6 +111,38 @@ function bucket(label: string, list: BacktestSetup[]): BacktestBucket {
     winRate: resolved.length ? (wins / resolved.length) * 100 : null,
     avgR: rs.length ? rs.reduce((a, b) => a + b, 0) / rs.length : null,
   };
+}
+
+const LOW_SAMPLE_RESOLVED = 3;
+
+/**
+ * Split the run's setups by whether each checklist component scored on that
+ * setup, and re-apply the same bucket stats to both sides.
+ */
+function componentPresence(setups: BacktestSetup[]): ComponentPresenceRow[] {
+  const rows = DEN_COMPONENT_KEYS.map((key) => {
+    const has = setups.filter((s) => s.components.some((c) => c.key === key));
+    const hasNot = setups.filter((s) => !s.components.some((c) => c.key === key));
+    const present = bucket("Present", has);
+    const absent = bucket("Absent", hasNot);
+    const noComparison = has.length === 0 || hasNot.length === 0;
+    const lowSample = present.resolved < LOW_SAMPLE_RESOLVED || absent.resolved < LOW_SAMPLE_RESOLVED;
+    const avgRGap =
+      !noComparison && present.avgR !== null && absent.avgR !== null
+        ? Math.abs(present.avgR - absent.avgR)
+        : null;
+    return {
+      key,
+      label: CHECKLIST_BY_KEY[key]?.label ?? key,
+      present,
+      absent,
+      noComparison,
+      lowSample,
+      avgRGap,
+    };
+  });
+  // Biggest avgR gap first; rows without a valid comparison sink to the bottom.
+  return rows.sort((a, b) => (b.avgRGap ?? -1) - (a.avgRGap ?? -1));
 }
 
 function scoreBucketLabel(score: number): string {
@@ -264,6 +312,7 @@ export function runDenBacktest(input: BacktestInput): BacktestResult {
     byScore: scoreLabels
       .map((label) => bucket(label, setups.filter((s) => scoreBucketLabel(s.score) === label)))
       .filter((row) => row.setups > 0),
+    byComponent: componentPresence(setups),
     setups: setups.sort((a, b) => (a.time < b.time ? 1 : -1)),
   };
 }
