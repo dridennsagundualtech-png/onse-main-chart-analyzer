@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useAccess } from "@/lib/account";
-import { DISCLAIMER } from "@/lib/analysis-types";
+import { CHECKLIST_BY_KEY, DISCLAIMER } from "@/lib/analysis-types";
 import { captureElement, screenshotFilename } from "@/lib/capture";
 import { DEFAULT_SETTINGS, LOCAL_USER, useAnalyses, useSaveAnalysis, useSaveScreenshot, useSaveSettings, useSettings } from "@/lib/data";
 import type { DenRules } from "@/lib/den-rules";
@@ -593,7 +593,7 @@ function MarketAnalyze() {
             {denResult.checklist.map((item) => (
               <div key={item.key} className="rounded-2xl border border-border bg-elevated p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold">{item.label}</p>
+                  <p className="text-xs font-semibold">{CHECKLIST_BY_KEY[item.key]?.label ?? item.key}</p>
                   <span className="text-xs font-semibold text-primary">
                     {item.score}/{item.max}
                   </span>
