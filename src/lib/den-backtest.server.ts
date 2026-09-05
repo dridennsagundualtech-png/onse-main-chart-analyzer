@@ -8,7 +8,9 @@
  *
  * This file does not modify the live analyser — it reuses runDenAnalysis.
  */
+import { CHECKLIST_BY_KEY } from "./analysis-types";
 import { runDenAnalysis, type DenSeries } from "./den-analyzer.server";
+import { DEN_COMPONENT_KEYS } from "./den-rules";
 import type { Candle } from "./market.server";
 
 export interface BacktestInput {
