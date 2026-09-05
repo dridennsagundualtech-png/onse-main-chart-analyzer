@@ -34,6 +34,7 @@ export function BacktestSection() {
   const [candleCount, setCandleCount] = useState(400);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<BacktestResult | null>(null);
+  const [showComponents, setShowComponents] = useState(false);
 
   const symbolsQuery = useQuery({
     queryKey: ["market-symbols"],
