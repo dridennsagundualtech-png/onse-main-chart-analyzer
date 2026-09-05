@@ -59,6 +59,19 @@ export interface BacktestBucket {
   avgR: number | null;
 }
 
+export interface ComponentPresenceRow {
+  key: string;
+  label: string;
+  present: BacktestBucket;
+  absent: BacktestBucket;
+  /** True when one side has zero setups — no comparison is possible. */
+  noComparison: boolean;
+  /** True when either side has fewer than 3 resolved setups. */
+  lowSample: boolean;
+  /** |present avgR − absent avgR| when both sides are resolved; null otherwise. */
+  avgRGap: number | null;
+}
+
 export interface BacktestResult {
   symbol: string;
   stepTimeframe: string;
@@ -76,6 +89,7 @@ export interface BacktestResult {
   totalR: number;
   byDirection: BacktestBucket[];
   byScore: BacktestBucket[];
+  byComponent: ComponentPresenceRow[];
   setups: BacktestSetup[];
 }
 
