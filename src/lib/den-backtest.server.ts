@@ -312,6 +312,7 @@ export function runDenBacktest(input: BacktestInput): BacktestResult {
     byScore: scoreLabels
       .map((label) => bucket(label, setups.filter((s) => scoreBucketLabel(s.score) === label)))
       .filter((row) => row.setups > 0),
+    byComponent: componentPresence(setups),
     setups: setups.sort((a, b) => (a.time < b.time ? 1 : -1)),
   };
 }
