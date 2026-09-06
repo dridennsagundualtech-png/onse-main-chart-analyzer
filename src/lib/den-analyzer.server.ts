@@ -757,7 +757,10 @@ export function runDenAnalysis(input: DenInput): MarketAnalysis {
   }
 
   // ---------- CHoCH ----------
-  const choch = findChoch(candles, bias);
+  // Entry-timing signal: detect on the lowest timeframe, like the sweep and BOS/MSS.
+  const choch = findChoch(ltfCandles, bias);
+  const chochBias: Bias | null = choch ? (choch.side === "up" ? "BULLISH" : "BEARISH") : null;
+  const chochConflict = biasDirectional && chochBias !== null && chochBias !== bias;
   add({
     key: "choch",
     status: choch
@@ -765,15 +768,20 @@ export function runDenAnalysis(input: DenInput): MarketAnalysis {
       : "No change of character against the current trend",
     score: choch ? (choch.closedBeyond ? 2 : 1) : 0,
     evidence: choch
-      ? `Price broke the last counter-trend swing at ${fmt(choch.level, d)} on ${choch.time.slice(0, 16)}${choch.closedBeyond ? " with a close beyond it" : " on a wick only"}.`
-      : "The trend has not been challenged: no swing against the bias has been broken.",
+      ? `On ${ltf.timeframe} price broke the last counter-trend swing at ${fmt(choch.level, d)} on ${choch.time.slice(0, 16)}${choch.closedBeyond ? " with a close beyond it" : " on a wick only"}.${chochConflict ? ` This ${chochBias!.toLowerCase()} shift runs against the ${bias.toLowerCase()} higher-timeframe bias, so it hints at a turn rather than confirming the trend.` : ""}`
+      : `No ${ltf.timeframe} swing against the bias has been broken: the trend has not been challenged.`,
     confidence: choch ? (choch.closedBeyond ? "HIGH" : "MEDIUM") : "LOW",
   });
+  if (chochConflict) {
+    cautions.push(
+      `Timeframe conflict: the ${ltf.timeframe} change of character points ${chochBias!.toLowerCase()} against a ${bias.toLowerCase()} ${htf.timeframe} bias.`,
+    );
+  }
   if (choch) {
     markers.push({
       key: "choch",
       label: "CHoCH",
-      timeframe: primary.timeframe,
+      timeframe: ltf.timeframe,
       price_high: Number(choch.level.toFixed(d)),
       price_low: Number(choch.level.toFixed(d)),
       time_from: choch.time,
