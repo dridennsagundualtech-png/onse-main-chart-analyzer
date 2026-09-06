@@ -217,6 +217,14 @@ export interface AnalysisResult {
   /** Which provider/model actually served this analysis (data-mode only). */
   provider_used?: string | null;
   model_used?: string | null;
+  /**
+   * Live market price fetched via Firecrawl at analysis time. Only set when
+   * FIRECRAWL_API_KEY is configured server-side and the asset is known —
+   * absent otherwise, so nothing else in the app needs to change.
+   */
+  live_price?: { price: number; as_of: string; source: string } | null;
+  /** Honest, non-predictive note comparing entry_zone to live_price. */
+  price_drift_note?: string | null;
 }
 
 /**
