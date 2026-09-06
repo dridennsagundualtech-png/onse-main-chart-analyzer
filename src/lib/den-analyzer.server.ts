@@ -773,7 +773,7 @@ export function runDenAnalysis(input: DenInput): MarketAnalysis {
     confidence: choch ? (choch.closedBeyond ? "HIGH" : "MEDIUM") : "LOW",
   });
   if (chochConflict) {
-    cautions.push(
+    reasoning.push(
       `Timeframe conflict: the ${ltf.timeframe} change of character points ${chochBias!.toLowerCase()} against a ${bias.toLowerCase()} ${htf.timeframe} bias.`,
     );
   }
