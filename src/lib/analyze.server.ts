@@ -9,6 +9,7 @@
 
 import { chatWithFallback } from "./ai-gateway.server";
 import { cascadeModels, isDenModel } from "./ai-models";
+import { fetchLivePrice, checkPriceDrift } from "./live-price.server";
 import {
   CHECKLIST_SPEC,
   MAX_SCORE,
@@ -216,7 +217,7 @@ export async function runAnalysis(input: AnalyzeInput): Promise<AnalysisResult> 
 
   const asset = String(raw["asset"] ?? "").trim() || (input.assetHint ?? "UNKNOWN");
 
-  return {
+  const result: AnalysisResult = {
     asset: asset.toUpperCase().slice(0, 24),
     market_type: String(raw["market_type"] ?? "unknown").toLowerCase().slice(0, 20),
     timeframes: strArray(raw["timeframes"], 8),
@@ -244,8 +245,18 @@ export async function runAnalysis(input: AnalyzeInput): Promise<AnalysisResult> 
     required_confirmation: strArray(raw["required_confirmation"], 8),
     invalidation: strArray(raw["invalidation"], 8),
     reasoning: strArray(raw["reasoning"], 10),
-
   };
+
+  // Live price cross-check (non-fatal: silently no-ops without FIRECRAWL_API_KEY).
+  if (result.sufficient_information && result.asset && result.asset !== "UNKNOWN") {
+    const live = await fetchLivePrice(result.asset, result.market_type);
+    if (live) {
+      result.live_price = live;
+      result.price_drift_note = checkPriceDrift(result.entry_zone, live);
+    }
+  }
+
+  return result;
 }
 
 /* ------------------------------------------------------------------ */
@@ -408,7 +419,7 @@ export async function runAnalysisFromData(input: AnalyzeDataInput): Promise<Anal
 
   const timeframes = strArray(raw["timeframes"], 8);
 
-  return {
+  const result: AnalysisResult = {
     asset: input.symbol.toUpperCase().slice(0, 24),
     market_type: String(raw["market_type"] ?? "unknown").toLowerCase().slice(0, 20),
     timeframes: timeframes.length ? timeframes : series.map((s) => s.timeframe),
@@ -441,4 +452,15 @@ export async function runAnalysisFromData(input: AnalyzeDataInput): Promise<Anal
     provider_used: provider,
     model_used: servedModel,
   };
+
+  // Live price cross-check (non-fatal: silently no-ops without FIRECRAWL_API_KEY).
+  if (result.sufficient_information && result.asset && result.asset !== "UNKNOWN") {
+    const live = await fetchLivePrice(result.asset, result.market_type);
+    if (live) {
+      result.live_price = live;
+      result.price_drift_note = checkPriceDrift(result.entry_zone, live);
+    }
+  }
+
+  return result;
 }
