@@ -492,7 +492,7 @@ export function runDenAnalysis(input: DenInput): MarketAnalysis {
     `Structure: ${htf.timeframe} shows ${htfBias.toLowerCase()} swing sequence, so the bigger-picture bias is ${bias.toLowerCase()}.`,
   );
 
-  /** Entry-timing detectors (sweep, structure break) read the lowest timeframe. */
+  /** Entry-timing detectors (sweep, structure break, change of character) read the lowest timeframe. */
   const ltfCandles = ltf.candles;
   const biasDirectional = bias === "BULLISH" || bias === "BEARISH";
 
