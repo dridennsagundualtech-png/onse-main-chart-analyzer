@@ -294,6 +294,12 @@ export function ResultView({ result, journal, settings, savedRow }: ResultViewPr
               Reward-to-risk is below your minimum of {settings.min_rr}:1 — flagged as unfavourable.
             </p>
           )}
+          {result.price_drift_note && (
+            <p className="mt-3 flex items-start gap-2 rounded-xl bg-primary/10 p-3 text-xs text-primary">
+              <Info className="mt-0.5 size-4 shrink-0" />
+              {result.price_drift_note}
+            </p>
+          )}
           <p className="mt-3 text-xs text-muted-foreground">
             <TermTooltip term="R:R" label="What R:R means" /> — it measures potential reward relative
             to defined risk. It does not predict win probability.
