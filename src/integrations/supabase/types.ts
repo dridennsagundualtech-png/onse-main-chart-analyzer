@@ -240,40 +240,40 @@ export type Database = {
       }
       ohlc_data: {
         Row: {
-          close: number | null
-          high: number | null
+          close: number
+          created_at: string
+          high: number
           id: number
-          low: number | null
-          open: number | null
+          low: number
+          open: number
           symbol: string
           tick_volume: number | null
-          time: string | null
-          timeframe: string | null
-          updated_at: string | null
+          time: string
+          timeframe: string
         }
         Insert: {
-          close?: number | null
-          high?: number | null
+          close: number
+          created_at?: string
+          high: number
           id?: number
-          low?: number | null
-          open?: number | null
+          low: number
+          open: number
           symbol: string
           tick_volume?: number | null
-          time?: string | null
-          timeframe?: string | null
-          updated_at?: string | null
+          time: string
+          timeframe: string
         }
         Update: {
-          close?: number | null
-          high?: number | null
+          close?: number
+          created_at?: string
+          high?: number
           id?: number
-          low?: number | null
-          open?: number | null
+          low?: number
+          open?: number
           symbol?: string
           tick_volume?: number | null
-          time?: string | null
-          timeframe?: string | null
-          updated_at?: string | null
+          time?: string
+          timeframe?: string
         }
         Relationships: []
       }
